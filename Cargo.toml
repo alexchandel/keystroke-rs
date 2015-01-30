@@ -9,8 +9,6 @@ repository = "https://github.com/alexchandel/screenshot-rs"
 readme = "README.md"
 license = "Unlicense"
 
-[dependencies.user32-sys]
-path = "../user32-sys"
-
-[dependencies.winapi]
-path = "../winapi-rs"
+[dependencies]
+winapi = "*"
+user32-sys = "*"
