@@ -5,7 +5,7 @@ version = "0.0.2"
 authors = ["Alex Chandel <alexchandel@gmail.com>"]
 description = "Send a string, character, or keystroke event to the system."
 keywords = ["keyboard", "gui", "scripting"]
-repository = "https://github.com/alexchandel/screenshot-rs"
+repository = "https://github.com/alexchandel/keystroke-rs"
 readme = "README.md"
 license = "Unlicense"
 
