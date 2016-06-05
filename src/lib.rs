@@ -29,10 +29,10 @@ mod platform {
 	extern crate winapi;
 	extern crate user32 as user32_sys;
 
-	use std::mem::{size_of, transmute_copy};
+	use std::mem::{size_of, zeroed};
 	use self::winapi::{c_int, WORD};
 	use self::winapi::{INPUT_KEYBOARD, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE};
-	use self::winapi::{INPUT, LPINPUT, KEYBDINPUT, MOUSEINPUT};
+	use self::winapi::{INPUT, LPINPUT, KEYBDINPUT};
 	use self::winapi::{VK_RETURN, VK_SHIFT, VK_CONTROL, VK_MENU};
 	use self::user32_sys::SendInput;
 
@@ -79,26 +79,28 @@ mod platform {
 			Key::Physical(p) => {
 				let mut x = INPUT {
 					type_: INPUT_KEYBOARD,
-					union_: transmute_copy::<KEYBDINPUT, MOUSEINPUT>(&KEYBDINPUT {
-						wVk: get_keycode(p), // 'a' key
-						wScan: 0, // 0 := hardware scan code for a key
-						dwFlags: 0, // 0 := a key press
-						time: 0,
-						dwExtraInfo: 0,
-					}),
+					u: zeroed(),
+				};
+				*x.ki_mut() = KEYBDINPUT {
+					wVk: get_keycode(p), // 'a' key
+					wScan: 0, // 0 := hardware scan code for a key
+					dwFlags: 0, // 0 := a key press
+					time: 0,
+					dwExtraInfo: 0,
 				};
 				SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
 			},
 			Key::Unicode(c) => {
 				let mut x = INPUT {
 					type_: INPUT_KEYBOARD,
-					union_: transmute_copy::<KEYBDINPUT, MOUSEINPUT>(&KEYBDINPUT {
-						wVk: 0,
-						wScan: c as WORD, // 0 := hardware scan code for a key
-						dwFlags: KEYEVENTF_UNICODE, // 0 := a key press
-						time: 0,
-						dwExtraInfo: 0,
-					}),
+					u: zeroed(),
+				};
+				*x.ki_mut() = KEYBDINPUT {
+					wVk: 0,
+					wScan: c as WORD, // 0 := hardware scan code for a key
+					dwFlags: KEYEVENTF_UNICODE, // 0 := a key press
+					time: 0,
+					dwExtraInfo: 0,
 				};
 				SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
 			}
@@ -110,26 +112,28 @@ mod platform {
 			Key::Physical(p) => {
 				let mut x = INPUT {
 					type_: INPUT_KEYBOARD,
-					union_: transmute_copy::<KEYBDINPUT, MOUSEINPUT>(&KEYBDINPUT {
-						wVk: get_keycode(p), // 'a' key
-						wScan: 0, // 0 := hardware scan code for a key
-						dwFlags: KEYEVENTF_KEYUP,
-						time: 0,
-						dwExtraInfo: 0,
-					}),
+					u: zeroed(),
+				};
+				*x.ki_mut() = KEYBDINPUT {
+					wVk: get_keycode(p), // 'a' key
+					wScan: 0, // 0 := hardware scan code for a key
+					dwFlags: KEYEVENTF_KEYUP,
+					time: 0,
+					dwExtraInfo: 0,
 				};
 				SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
 			},
 			Key::Unicode(c) => {
 				let mut x = INPUT {
 					type_: INPUT_KEYBOARD,
-					union_: transmute_copy::<KEYBDINPUT, MOUSEINPUT>(&KEYBDINPUT {
-						wVk: 0, // 'a' key
-						wScan: c as WORD, // 0 := hardware scan code for a key
-						dwFlags: KEYEVENTF_UNICODE|KEYEVENTF_KEYUP,
-						time: 0,
-						dwExtraInfo: 0,
-					}),
+					u: zeroed(),
+				};
+				*x.ki_mut() = KEYBDINPUT {
+					wVk: 0, // 'a' key
+					wScan: c as WORD, // 0 := hardware scan code for a key
+					dwFlags: KEYEVENTF_UNICODE|KEYEVENTF_KEYUP,
+					time: 0,
+					dwExtraInfo: 0,
 				};
 				SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
 			}
