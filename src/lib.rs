@@ -32,7 +32,7 @@ mod platform {
 	use std::mem::{size_of, transmute_copy};
 	use self::winapi::{c_int, WORD};
 	use self::winapi::{INPUT_KEYBOARD, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE};
-	use self::winapi::{INPUT, LPINPUT, KEYBDINPUT, MOUSEINPUT};
+	use self::winapi::{INPUT, LPINPUT, KEYBDINPUT};
 	use self::winapi::{VK_RETURN, VK_SHIFT, VK_CONTROL, VK_MENU};
 	use self::user32_sys::SendInput;
 
@@ -79,7 +79,7 @@ mod platform {
 			Key::Physical(p) => {
 				let mut x = INPUT {
 					type_: INPUT_KEYBOARD,
-					union_: transmute_copy::<KEYBDINPUT, MOUSEINPUT>(&KEYBDINPUT {
+					u: transmute_copy(&KEYBDINPUT {
 						wVk: get_keycode(p), // 'a' key
 						wScan: 0, // 0 := hardware scan code for a key
 						dwFlags: 0, // 0 := a key press
@@ -92,7 +92,7 @@ mod platform {
 			Key::Unicode(c) => {
 				let mut x = INPUT {
 					type_: INPUT_KEYBOARD,
-					union_: transmute_copy::<KEYBDINPUT, MOUSEINPUT>(&KEYBDINPUT {
+					u: transmute_copy(&KEYBDINPUT {
 						wVk: 0,
 						wScan: c as WORD, // 0 := hardware scan code for a key
 						dwFlags: KEYEVENTF_UNICODE, // 0 := a key press
@@ -110,7 +110,7 @@ mod platform {
 			Key::Physical(p) => {
 				let mut x = INPUT {
 					type_: INPUT_KEYBOARD,
-					union_: transmute_copy::<KEYBDINPUT, MOUSEINPUT>(&KEYBDINPUT {
+					u: transmute_copy(&KEYBDINPUT {
 						wVk: get_keycode(p), // 'a' key
 						wScan: 0, // 0 := hardware scan code for a key
 						dwFlags: KEYEVENTF_KEYUP,
@@ -123,7 +123,7 @@ mod platform {
 			Key::Unicode(c) => {
 				let mut x = INPUT {
 					type_: INPUT_KEYBOARD,
-					union_: transmute_copy::<KEYBDINPUT, MOUSEINPUT>(&KEYBDINPUT {
+					u: transmute_copy(&KEYBDINPUT {
 						wVk: 0, // 'a' key
 						wScan: c as WORD, // 0 := hardware scan code for a key
 						dwFlags: KEYEVENTF_UNICODE|KEYEVENTF_KEYUP,
@@ -157,7 +157,7 @@ mod platform {
 		}
 	}
 
-	/// Send a string as keyboard events
+	/// Send a string as keyboard events. Unsupported chars are silently ignored.
 	pub fn send_str(msg: &str) {
 		for c in msg.chars() {
 			send_char(c);
