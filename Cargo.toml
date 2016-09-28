@@ -10,5 +10,6 @@ readme = "README.md"
 license = "Unlicense"
 
 [dependencies]
-winapi = "*"
-user32-sys = "*"
+winapi = "^0"
+user32-sys = "^0"
+
