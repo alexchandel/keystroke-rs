@@ -23,6 +23,10 @@ pub enum Key {
 #[path = "platform/windows.rs"]
 mod platform;
 
+#[cfg(target_os = "linux")]
+#[path = "platform/linux.rs"]
+mod platform;
+
 #[cfg(test)]
 mod tests {
 	use super::send_str;
