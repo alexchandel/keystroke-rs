@@ -9,7 +9,7 @@ repository = "https://github.com/alexchandel/keystroke-rs"
 readme = "README.md"
 license = "Unlicense"
 
-[dependencies]
+[target.'cfg(windows)'.dependencies]
 winapi = "^0"
 user32-sys = "^0"
 
