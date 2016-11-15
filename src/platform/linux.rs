@@ -8,6 +8,8 @@ use super::{Physical, Key};
 
 const DELAY: u32 = 12_000; // microseconds
 
+// Keysyms can be found via the xev tool or here:
+// https://cgit.freedesktop.org/xorg/proto/x11proto/tree/
 fn get_physical_keysym(key: Physical) -> &'static str {
     use Physical::*;
     match key {
