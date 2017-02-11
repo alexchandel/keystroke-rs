@@ -41,4 +41,4 @@ TLDR; call `keystroke::send_str` with a `&str`.
 
 ## Development
 
-* Only has Windows bindings right now. PR's welcome adding linux and macOS!
+* Only supports Windows and Linux right now. PRs adding MacOS and other OS are welcome!
