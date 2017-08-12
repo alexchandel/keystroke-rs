@@ -3,118 +3,102 @@ extern crate user32 as user32_sys;
 
 use std::mem::{size_of, transmute_copy};
 use self::winapi::{c_int, WORD};
-use self::winapi::{INPUT_KEYBOARD, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE};
-use self::winapi::{INPUT, LPINPUT, KEYBDINPUT};
-use self::winapi::{VK_RETURN, VK_SHIFT, VK_CONTROL, VK_MENU};
+use self::winapi::{INPUT_KEYBOARD, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, KEYEVENTF_SCANCODE};
+use self::winapi::{INPUT, KEYBDINPUT};
 use self::user32_sys::SendInput;
 
 use super::{Physical, Key};
 
-fn get_keycode(p: Physical) -> WORD {
+fn get_scancode(p: Physical) -> WORD {
     use Physical::*;
     match p {
-        Return => VK_RETURN as WORD,
-        Shift => VK_SHIFT as WORD,
-        Control => VK_CONTROL as WORD,
-        Alt => VK_MENU as WORD,
-        A => 'A' as WORD,
-        B => 'B' as WORD,
-        C => 'C' as WORD,
-        D => 'D' as WORD,
-        E => 'E' as WORD,
-        F => 'F' as WORD,
-        G => 'G' as WORD,
-        H => 'H' as WORD,
-        I => 'I' as WORD,
-        J => 'J' as WORD,
-        K => 'K' as WORD,
-        L => 'L' as WORD,
-        M => 'M' as WORD,
-        N => 'N' as WORD,
-        O => 'O' as WORD,
-        P => 'P' as WORD,
-        Q => 'Q' as WORD,
-        R => 'R' as WORD,
-        S => 'S' as WORD,
-        T => 'T' as WORD,
-        U => 'U' as WORD,
-        V => 'V' as WORD,
-        W => 'W' as WORD,
-        X => 'X' as WORD,
-        Y => 'Y' as WORD,
-        Z => 'Z' as WORD,
+        Return => 0x1c as WORD,
+        Shift => 0x2a as WORD,
+        Control => 0x1d as WORD,
+        Alt => 0x38 as WORD,
+        A => 0x1e as WORD,
+        B => 0x30 as WORD,
+        C => 0x2e as WORD,
+        D => 0x20 as WORD,
+        E => 0x12 as WORD,
+        F => 0x21 as WORD,
+        G => 0x22 as WORD,
+        H => 0x23 as WORD,
+        I => 0x17 as WORD,
+        J => 0x24 as WORD,
+        K => 0x25 as WORD,
+        L => 0x26 as WORD,
+        M => 0x32 as WORD,
+        N => 0x31 as WORD,
+        O => 0x18 as WORD,
+        P => 0x19 as WORD,
+        Q => 0x10 as WORD,
+        R => 0x13 as WORD,
+        S => 0x1f as WORD,
+        T => 0x14 as WORD,
+        U => 0x16 as WORD,
+        V => 0x2f as WORD,
+        W => 0x11 as WORD,
+        X => 0x2d as WORD,
+        Y => 0x15 as WORD,
+        Z => 0x2c as WORD,
+    }
+}
+
+unsafe fn key_to_lpinput(key: &Key, up: bool) -> INPUT {
+    let upflag = if up { KEYEVENTF_KEYUP } else { 0 };
+
+    match *key {
+        Key::Physical(p) => {
+            INPUT {
+                type_: INPUT_KEYBOARD,
+                u: transmute_copy(&KEYBDINPUT {
+                    wVk: 0,
+                    wScan: get_scancode(p), // hardware scan code
+                    dwFlags: KEYEVENTF_SCANCODE | upflag,
+                    time: 0,
+                    dwExtraInfo: 0,
+                }),
+            }
+        },
+        Key::Unicode(c) => {
+            INPUT {
+                type_: INPUT_KEYBOARD,
+                u: transmute_copy(&KEYBDINPUT {
+                    wVk: 0,
+                    wScan: c as WORD, // a unicode code
+                    dwFlags: KEYEVENTF_UNICODE | upflag,
+                    time: 0,
+                    dwExtraInfo: 0,
+                }),
+            }
+        },
+    }
+}
+
+fn send_input(keys: &[Key], up: bool) {
+    unsafe { 
+        //convert all the keys to windows events
+        let mut inputs: Vec<INPUT> = keys.iter().map(|k| key_to_lpinput(k, up)).collect();
+        SendInput(
+            inputs.len() as u32,
+            inputs.as_mut_ptr(),
+            size_of::<INPUT>() as c_int
+        );
     }
 }
 
 pub fn press_key(k: Key) {
-    unsafe { match k {
-        Key::Physical(p) => {
-            let mut x = INPUT {
-                type_: INPUT_KEYBOARD,
-                u: transmute_copy(&KEYBDINPUT {
-                    wVk: get_keycode(p), // 'a' key
-                    wScan: 0, // 0 := hardware scan code for a key
-                    dwFlags: 0, // 0 := a key press
-                    time: 0,
-                    dwExtraInfo: 0,
-                }),
-            };
-            SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
-        },
-        Key::Unicode(c) => {
-            let mut x = INPUT {
-                type_: INPUT_KEYBOARD,
-                u: transmute_copy(&KEYBDINPUT {
-                    wVk: 0,
-                    wScan: c as WORD, // 0 := hardware scan code for a key
-                    dwFlags: KEYEVENTF_UNICODE, // 0 := a key press
-                    time: 0,
-                    dwExtraInfo: 0,
-                }),
-            };
-            SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
-        }
-    }}
+    send_input(&[k], false);
 }
 
 pub fn release_key(k: Key) {
-    unsafe { match k {
-        Key::Physical(p) => {
-            let mut x = INPUT {
-                type_: INPUT_KEYBOARD,
-                u: transmute_copy(&KEYBDINPUT {
-                    wVk: get_keycode(p), // 'a' key
-                    wScan: 0, // 0 := hardware scan code for a key
-                    dwFlags: KEYEVENTF_KEYUP,
-                    time: 0,
-                    dwExtraInfo: 0,
-                }),
-            };
-            SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
-        },
-        Key::Unicode(c) => {
-            let mut x = INPUT {
-                type_: INPUT_KEYBOARD,
-                u: transmute_copy(&KEYBDINPUT {
-                    wVk: 0, // 'a' key
-                    wScan: c as WORD, // 0 := hardware scan code for a key
-                    dwFlags: KEYEVENTF_UNICODE|KEYEVENTF_KEYUP,
-                    time: 0,
-                    dwExtraInfo: 0,
-                }),
-            };
-            SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
-        }
-    }}
+    send_input(&[k], true);
 }
 
 pub fn send_combo(keys: &[Key]) {
-    for &k in keys.iter() {
-        press_key(k);
-    }
-    for &k in keys.iter().rev() {
-        release_key(k);
-    }
+    send_input(keys, false);
+    send_input(keys, true);
 }
 
 pub fn send_key(k: Key) {
